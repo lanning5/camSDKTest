@@ -170,7 +170,7 @@ namespace haltest2
         {
             DeviceListAcq();
         }
-
+        //
         private void DeviceListAcq()
         {
             // ch:创建设备列表 | en:Create Device List
@@ -1067,7 +1067,7 @@ namespace haltest2
         #endregion
 
         #region // 3D 相机
-
+        //
         //实例化简化版DLL
         private LJX8000A ljxa = new LJX8000A();
         //用于保存高度/浓淡数据的缓存
