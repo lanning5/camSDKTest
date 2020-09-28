@@ -1113,7 +1113,7 @@ private void _acquireFinish(int _ID, int _notify)
 }
 
 
-//以上数据获取部分已结束，以下部分是显示+保存相关的内容
+        //以上数据获取部分已结束，以下部分是显示+保存相关的内容
 
             //在logBox中添加带时间戳的记录
             private void AddLog(string _text, DateTime _time)
@@ -1358,7 +1358,48 @@ private void _acquireFinish(int _ID, int _notify)
 
         private void timerwaitimage_Tick(object sender, EventArgs e)
         {
+            try
+            {
+                //如果接收到图像了，就保存 + 显示
+                if (image_received)
+                {
+                    image_received = false;
 
+                    int _pitch = 0;
+                    ljxa.GetHeightData(0, ref _heightdata, ref imgwidth, ref _pitch);
+                    ljxa.GetLuminanceData(0, ref _luminancedata);
+                    if (imgwidth > 0 & _heightdata.Length > imgwidth)
+                    {
+                        AddLog("Image File Received" + "\n", DateTime.Now);
+                        if (!(_heightdata.Length == _luminancedata.Length))
+                        {
+                            _luminancedata = new ushort[] { };
+                        }
+                        int _imgheight = _heightdata.Length / imgwidth;
+                        //计算3D显示的网格细化比例（设定过小会造成系统严重卡顿）
+                        decimal scale = imgwidth / 400;
+                        ljxaWindows3D1.BinningSize = Convert.ToInt32(Math.Ceiling(scale));
+                        //将3D数据传递给显示空间
+                        ljxaWindows3D1.SetImage(_heightdata, _luminancedata, imgwidth);
+                        //保存图像数据
+                        DateTime NowTime = DateTime.Now;
+                        String fileName = NowTime.Hour + "-" + NowTime.Minute + "-" + NowTime.Second;
+                        LJX8000A.SaveReceiveDataAsFile.SaveAsImage(_heightdata, imgwidth, image_save_path + fileName + "_height.tif", LJX8000A.SaveReceiveDataAsFile.ImageSaveType.Tiff);
+                        LJX8000A.SaveReceiveDataAsFile.SaveAsImage(_luminancedata, imgwidth, image_save_path + fileName + "_luminance.tif", LJX8000A.SaveReceiveDataAsFile.ImageSaveType.Tiff);
+                        LJX8000A.SaveReceiveDataAsFile.SaveAsImage(_heightdata, imgwidth, image_save_path + fileName + "_height.bmp", LJX8000A.SaveReceiveDataAsFile.ImageSaveType.Bmp565);
+                        LJX8000A.SaveReceiveDataAsFile.SaveAsImage(_luminancedata, imgwidth, image_save_path + fileName + "_luminance.bmp", LJX8000A.SaveReceiveDataAsFile.ImageSaveType.Bmp565);
+                        LJX8000A.SaveReceiveDataAsFile.SaveAsCsv(_heightdata, imgwidth, image_save_path + fileName + "_height.csv");
+                        LJX8000A.SaveReceiveDataAsFile.SaveAsCsv(_luminancedata, imgwidth, image_save_path + fileName + "_luminance.csv");
+                        AddLog("Image File Saved:  " + fileName + "(.tif|.bmp|.csv)" + "\n", DateTime.Now);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("3D操作或者参数不正确");
+                throw;
+            }
+          
         }
     }
 }
